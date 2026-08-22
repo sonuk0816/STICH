@@ -1,8 +1,11 @@
+from google import genai
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
-from openai import OpenAI
+
+
 
 app = FastAPI()
 
@@ -16,7 +19,9 @@ app.add_middleware(
 )
 
 # setup openai
-client = OpenAI(api_key="OPENAI_API_KEY")
+client = genai.Client()
+
+
 
 # loading data globally
 try:
@@ -91,29 +96,32 @@ def search_data(user_message):
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
     user_msg = request.message
-    
-    # get the text from our csv and txt file
+
+    # 1. Fetch relevant store context from your CSV
     my_context = search_data(user_msg)
-    
-    # build the prompt for chatgpt
-    prompt = "You are Stitch, a chatbot for Stitch Culture. Use ONLY this context to answer. If asked about products, give the ID and price. Context: \n" + my_context
-    
+
+    # 2. Build your prompt for Stitch
+    prompt = f"""
+    You are Stitch, a helpful virtual assistant for Stitch Culture.
+    Use the following store context to answer the customer's question politely and concisely.
+
+    CONTEXT:
+    {my_context}
+
+    CUSTOMER MESSAGE: {user_msg}
+    """
+
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": user_msg}
-            ],
-            temperature=0.3
+        # 3. Call the Gemini model
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
         )
-        
-        reply = response.choices[0].message.content
-        return {"reply": reply}
-        
+        return {"reply": response.text}
+
     except Exception as e:
-        print("API Error:", e)
-        return {"reply": "Sorry, server error. Please try again."}
+        print(f"API Error: {e}")
+        return {"reply": "Sorry, I am having trouble connecting to my brain right now."}
 
 
     #reload : uvicorn main:app --reload
