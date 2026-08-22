@@ -20,7 +20,7 @@ function handleSendMessage() {
   showTypingIndicator();
 
   // 3. Make the REAL call to your FastAPI backend
-  fetch('http://127.0.0.1:8000/api/chat', {
+   fetch('https://stich-backend.onrender.com/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: text })
