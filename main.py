@@ -16,7 +16,7 @@ app.add_middleware(
 )
 
 # setup openai
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="OPENAI_API_KEY")
 
 # loading data globally
 try:
